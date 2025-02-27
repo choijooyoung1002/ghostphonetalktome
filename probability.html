@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>확률과 통계 시각화</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.0.0/math.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        input[type=range] {
+            width: 200px;
+        }
+        .explanation {
+            margin-top: 20px;
+            background-color: #e9f7fe;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>확률 분포 탐색기</h1>
+    
+    <div class="controls">
+        <label for="distribution-select">분포 선택:</label>
+        <select id="distribution-select">
+            <option value="normal">정규분포</option>
+            <option value="binomial">이항분포</option>
+            <option value="poisson">포아송분포</option>
+        </select>
+    </div>
+    
+    <div id="normal-controls" class="controls">
+        <h3>정규분포 파라미터</h3>
+        <label for="normal-mean">평균 (μ): <span id="normal-mean-value">0</span></label>
+        <input type="range" id="normal-mean" min="-5" max="5" step="0.5" value="0">
+        
+        <label for="normal-std">표준편차 (σ): <span id="normal-std-value">1</span></label>
+        <input type="range" id="normal-std" min="0.1" max="3" step="0.1" value="1">
+    </div>
+    
+    <div id="binomial-controls" class="controls" style="display:none;">
+        <h3>이항분포 파라미터</h3>
+        <label for="binomial-n">시행 횟수 (n): <span id="binomial-n-value">10</span></label>
+        <input type="range" id="binomial-n" min="1" max="30" step="1" value="10">
+        
+        <label for="binomial-p">성공 확률 (p): <span id="binomial-p-value">0.5</span></label>
+        <input type="range" id="binomial-p" min="0.01" max="0.99" step="0.01" value="0.5">
+    </div>
+    
+    <div id="poisson-controls" class="controls" style="display:none;">
+        <h3>포아송분포 파라미터</h3>
+        <label for="poisson-lambda">람다 (λ): <span id="poisson-lambda-value">5</span></label>
+        <input type="range" id="poisson-lambda" min="0.1" max="20" step="0.1" value="5">
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="distribution-chart"></canvas>
+    </div>
+    
+    <div class="explanation" id="distribution-explanation">
+        정규분포는 평균 μ를 중심으로 좌우대칭인 종 모양의 확률분포입니다. 표준편차 σ가 커질수록 분포는 더 넓게 퍼집니다.
+    </div>
+
+    <script>
+        // 차트 객체 초기화
+        let distributionChart;
+        
+        function initChart() {
+            const ctx = document.getElementById('distribution-chart').getContext('2d');
+            distributionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: '확률 밀도 함수',
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '확률 밀도/확률'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateDistribution() {
+            const selectedDist = document.getElementById('distribution-select').value;
+            
+            // 컨트롤 표시/숨김 처리
+            document.getElementById('normal-controls').style.display = 
+                selectedDist === 'normal' ? 'block' : 'none';
+            document.getElementById('binomial-controls').style.display = 
+                selectedDist === 'binomial' ? 'block' : 'none';
+            document.getElementById('poisson-controls').style.display = 
+                selectedDist === 'poisson' ? 'block' : 'none';
+            
+            if (selectedDist === 'normal') {
+                updateNormalDist
