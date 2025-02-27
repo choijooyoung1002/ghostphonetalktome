@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고급 확률과 통계 | 인터랙티브 학습</title>
+    <link rel="stylesheet" href="stats-styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.0.0/lib/browser/math.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>고급 확률과 통계의 세계</h1>
+        <p class="subtitle">추상적인 개념을 시각화로 이해하기</p>
+        <nav>
+            <ul>
+                <li><a href="#normal-distribution">정규분포와 중심극한정리</a></li>
+                <li><a href="#hypothesis-testing">가설검정</a></li>
+                <li><a href="#bayes-theorem">베이즈 정리</a></li>
+                <li><a href="#monte-carlo">몬테카를로 시뮬레이션</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="normal-distribution" class="section">
+            <h2>정규분포와 중심극한정리</h2>
+            <div class="explanation">
+                <p>정규분포(Normal Distribution)는 통계학에서 가장 중요한 확률분포입니다. 중심극한정리는 표본의 크기가 충분히 클 때, 표본평균의 분포는 정규분포에 근사한다는 정리입니다.</p>
+                <div class="math-formula">
+                    \[ f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2} \]
+                </div>
+            </div>
+            
+            <div class="interactive-container">
+                <div class="controls">
+                    <div class="parameter-controls">
+                        <div class="input-group">
+                            <label for="mean-slider">평균 (μ): <span id="mean-value">0</span></label>
+                            <input type="range" id="mean-slider" min="-5" max="5" value="0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label for="std-slider">표준편차 (σ): <span id="std-value">1</span></label>
+                            <input type="range" id="std-slider" min="0.1" max="3" value="1" step="0.1">
+                        </div>
+                    </div>
+                    <div class="probability-controls">
+                        <div class="input-group">
+                            <label for="prob-x1">X ≤ </label>
+                            <input type="number" id="prob-x1" value="0" step="0.1">
+                            <span>확률: <span id="prob-result1">0.5</span></span>
+                            <button id="calculate-prob1">계산</button>
+                        </div>
+                        <div class="input-group">
+                            <label for="prob-x2-lower">P( </label>
+                            <input type="number" id="prob-x2-lower" value="-1" step="0.1">
+                            <label> ≤ X ≤ </label>
+                            <input type="number" id="prob-x2-upper" value="1" step="0.1">
+                            <label> ): </label>
+                            <span id="prob-result2">0.6827</span>
+                            <button id="calculate-prob2">계산</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="normal-graph" class="graph-container"></div>
+                
+                <div class="divider"></div>
+                
+                <h3>중심극한정리 시뮬레이터</h3>
+                <p>아래 컨트롤을 사용하여 다양한 분포에서 표본을 추출하고, 표본 평균의 분포가 정규분포에 근사하는 것을 관찰하세요.</p>
+                
+                <div class="controls">
+                    <div class="input-group">
+                        <label for="dist-type">원본 분포:</label>
+                        <select id="dist-type">
+                            <option value="uniform">균등분포</option>
+                            <option value="exponential">지수분포</option>
+                            <option value="binomial">이항분포</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="sample-size">표본 크기:</label>
+                        <input type="range" id="sample-size" min="1" max="100" value="30">
+                        <span id="sample-size-value">30</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="num-samples">시행 횟수:</label>
+                        <input type="range" id="num-samples" min="10" max="10000" value="1000">
+                        <span id="num-samples-value">1000</span>
+                    </div>
+                    <button id="run-clt">시뮬레이션 실행</button>
+                </div>
+                <div class="clt-container">
+                    <div class="clt-graph">
+                        <h4>원본 분포</h4>
+                        <div id="original-dist-graph"></div>
+                    </div>
+                    <div class="clt-graph">
+                        <h4>표본평균 분포</h4>
+                        <div id="means-dist-graph"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="hypothesis-testing" class="section">
+            <h2>가설검정</h2>
+            <div class="explanation">
+                <p>가설검정은 표본 데이터를 기반으로 모집단에 대한 가설의 타당성을 평가하는 통계적 방법입니다. 이 섹션에서는 단일표본 t검정을 시각화합니다.</p>
+                <div class="math-formula">
+                    \[ t = \frac{\bar{x} - \mu_0}{s / \sqrt{n}} \]
+                </div>
+                <p>여기서 \(\bar{x}\)는 표본평균, \(\mu_0\)는 귀무가설에서의 모평균, \(s\)는 표본표준편차, \(n\)은 표본크기입니다.</p>
+            </div>
+            
+            <div class="interactive-container">
+                <div class="controls">
+                    <div class="input-group">
+                        <label for="hypo-mean">귀무가설 모평균 (μ₀):</label>
+                        <input type="number" id="hypo-mean" value="50" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="sample-mean">표본평균 (x̄):</label>
+                        <input type="number" id="sample-mean" value="52" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="sample-std">표본표준편차 (s):</label>
+                        <input type="number" id="sample-std" value="5" min="0.1" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="sample-n">표본크기 (n):</label>
+                        <input type="number" id="sample-n" value="30" min="2" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="alpha">유의수준 (α):</label>
+                        <select id="alpha">
+                            <option value="0.1">0.1</option>
+                            <option value="0.05" selected>0.05</option>
+                            <option value="0.01">0.01</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="alt-hypothesis">대립가설:</label>
+                        <select id="alt-hypothesis">
+                            <option value="two-sided">양측검정 (μ ≠ μ₀)</option>
+                            <option value="greater">우측검정 (μ > μ₀)</option>
+                            <option value="less">좌측검정 (μ < μ₀)</option>
+                        </select>
+                    </div>
+                    <button id="run-test">검정 실행</button>
+                </div>
+                
+                <div id="hypothesis-graph" class="graph-container"></div>
+                
+                <div id="test-results" class="results-container">
+                    <h3>검정 결과</h3>
+                    <div class="result-item">
+                        <span>t 통계량:</span>
+                        <span id="t-stat">2.18</span>
+                    </div>
+                    <div class="result-item">
+                        <span>p-값:</span>
+                        <span id="p-value">0.0372</span>
+                    </div>
+                    <div class="result-item">
+                        <span>기각역 경계:</span>
+                        <span id="critical-value">±2.045</span>
+                    </div>
+                    <div class="result-item conclusion">
+                        <span>결론:</span>
+                        <span id="conclusion">유의수준 0.05에서 귀무가설을 기각합니다. 모평균이 50과 다르다는 충분한 증거가 있습니다.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="bayes-theorem" class="section">
+            <h2>베이즈 정리</h2>
+            <div class="explanation">
+                <p>베이즈 정리는 사전 확률을 바탕으로 사후 확률을 계산하는 방법을 제공합니다. 이는 조건부 확률의 관계를 나타내는 정리입니다.</p>
+                <div class="math-formula">
+                    \[ P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)} \]
+                </div>
+            </div>
+            
+            <div class="interactive-container">
+                <div class="bayesian-example">
+                    <h3>의학 검사 시나리오</h3>
+                    <p>어떤 질병의 유병률이 1%라고 가정합니다. 이 질병을 검출하는 검사의 민감도(질병이 있을 때 양성 결과를 보이는 확률)는 95%이고, 특이도(질병이 없을 때 음성 결과를 보이는 확률)는 90%입니다.</p>
+                    <p><strong>문제:</strong> 검사 결과가 양성일 때, 실제로 질병을 가지고 있을 확률은 얼마인가요?</p>
+                    
+                    <div class="controls">
+                        <div class="input-group">
+                            <label for="prevalence">유병률 P(D):</label>
+                            <input type="range" id="prevalence" min="0.001" max="0.1" value="0.01" step="0.001">
+                            <span id="prevalence-value">1%</span>
+                        </div>
+                        <div class="input-group">
+                            <label for="sensitivity">민감도 P(+|D):</label>
+                            <input type="range" id="sensitivity" min="0.5" max="1" value="0.95" step="0.01">
+                            <span id="sensitivity-value">95%</span>
+                        </div>
+                        <div class="input-group">
+                            <label for="specificity">특이도 P(-|~D):</label>
+                            <input type="range" id="specificity" min="0.5" max="1" value="0.9" step="0.01">
+                            <span id="specificity-value">90%</span>
+                        </div>
+                        <button id="calculate-bayes">계산</button>
+                    </div>
+                    
+                    <div id="bayes-results" class="results-container">
+                        <h4>계산 결과</h4>
+                        <p>양성 결과가 나왔을 때 실제로 질병이 있을 확률 P(D|+): <span id="posterior-prob">8.7%</span></p>
+                    </div>
+                    
+                    <div id="bayes-visualization" class="graph-container"></div>
+                    
+                    <div class="explanation">
+                        <p class="highlight">놀라운가요? 많은 사람들이 이 확률이 95% 정도일 것이라고 직관적으로 생각하지만, 실제로는 훨씬 낮습니다. 이것이 베이즈 정리의 중요성을 보여주는 예입니다!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="monte-carlo" class="section">
+            <h2>몬테카를로 시뮬레이션</h2>
+            <div class="explanation">
+                <p>몬테카를로 방법은 난수를 이용하여 함수의 값이나 확률을 근사적으로 계산하는 알고리즘입니다. 이 섹션에서는 몬테카를로 시뮬레이션을 통해 원주율(π)을 추정하고, 복잡한 확률 문제를 해결하는 방법을 알아봅니다.</p>
+            </div>
+            
+            <div class="interactive-container">
+                <h3>원주율(π) 추정하기</h3>
+                <p>단위 정사각형 안에 그려진 단위 원에 무작위로 점을 찍습니다. 정사각형 내부에 찍힌 점 중 원 안에 들어가는 점의 비율은 π/4에 근사합니다.</p>
+                
+                <div class="controls">
+                    <div class="input-group">
+                        <label for="num-points">점의 개수:</label>
+                        <select id="num-points">
+                            <option value="100">100</option>
+                            <option value="1000">1,000</option>
+                            <option value="10000" selected>10,000</option>
+                            <option value="100000">100,000</option>
+                        </select>
+                    </div>
+                    <button id="run-monte-carlo">시뮬레이션 실행</button>
+                </div>
+                
+                <div class="monte-carlo-container">
+                    <div id="monte-carlo-graph" class="graph-container"></div>
+                    <div class="result-panel">
+                        <h4>결과</h4>
+                        <div class="result-item">
+                            <span>총 점의 수:</span>
+                            <span id="total-points">10,000</span>
+                        </div>
+                        <div class="result-item">
+                            <span>원 안의 점의 수:</span>
+                            <span id="points-in-circle">7,854</span>
+                        </div>
+                        <div class="result-item">
+                            <span>π 추정값:</span>
+                            <span id="pi-estimate">3.1416</span>
+                        </div>
+                        <div class="result-item">
+                            <span>실제 π와의 오차:</span>
+                            <span id="pi-error">0.0001 (0.003%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <h3>몬테카를로 시뮬레이션으로 복잡한 확률 계산하기</h3>
+                <p>3개의 주사위를 던졌을 때, 최소한 2개의 주사위가 같은 숫자가 나올 확률을 계산합니다.</p>
+                
+                <div class="controls">
+                    <div class="input-group">
+                        <label for="dice-trials">시뮬레이션 횟수:</label>
+                        <select id="dice-trials">
+                            <option value="100">100</option>
+                            <option value="1000">1,000</option>
+                            <option value="10000" selected>10,000</option>
+                            <option value="100000">100,000</option>
+                        </select>
+                    </div>
+                    <button id="run-dice-simulation">시뮬레이션 실행</button>
+                </div>
+                
+                <div class="results-container">
+                    <div class="result-item">
+                        <span>이론적 확률:</span>
+                        <span id="dice-theoretical">0.417</span>
+                    </div>
+                    <div class="result-item">
+                        <span>시뮬레이션 결과:</span>
+                        <span id="dice-empirical">0.422</span>
+                    </div>
+                    <div class="result-item">
+                        <span>오차:</span>
+                        <span id="dice-error">0.005 (1.2%)</span>
+                    </div>
+                </div>
+                
+                <div id="dice-graph" class="graph-container"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 최주영. 인터랙티브 확률과 통계 학습 페이지.</p>
+        <p>최종 업데이트: 2025-02-27</p>
+    </footer>
+
+    <script src="stats-script.js"></script>
+</body>
+</html>
